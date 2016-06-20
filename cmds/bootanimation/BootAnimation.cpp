@@ -68,6 +68,7 @@ namespace android {
 static const char OEM_BOOTANIMATION_FILE[] = "/oem/media/bootanimation.zip";
 static const char SYSTEM_BOOTANIMATION_FILE[] = "/system/media/bootanimation.zip";
 static const char SYSTEM_ENCRYPTED_BOOTANIMATION_FILE[] = "/system/media/bootanimation-encrypted.zip";
+static const char THEME_BOOTANIMATION_FILE[] = "/data/system/theme/bootanimation.zip";
 static const char SYSTEM_DATA_DIR_PATH[] = "/data/system";
 static const char SYSTEM_TIME_DIR_NAME[] = "time";
 static const char SYSTEM_TIME_DIR_PATH[] = "/data/system/time";
@@ -317,13 +318,14 @@ status_t BootAnimation::initTexture(SkBitmap *bitmap)
 
 
 // Get bootup Animation File
-// Parameter: ImageID: IMG_OEM IMG_SYS IMG_ENC
+// Parameter: ImageID: IMG_OEM IMG_SYS IMG_ENC IMG_THM
 // Return Value : File path
 const char *BootAnimation::getAnimationFileName(ImageID image)
 {
-    const char *fileName[3] = { OEM_BOOTANIMATION_FILE,
+    const char *fileName[4] = { OEM_BOOTANIMATION_FILE,
             SYSTEM_BOOTANIMATION_FILE,
-            SYSTEM_ENCRYPTED_BOOTANIMATION_FILE };
+            SYSTEM_ENCRYPTED_BOOTANIMATION_FILE,
+            THEME_BOOTANIMATION_FILE };
 
     // Load animations of Carrier through regionalization environment
     if (Environment::isSupported()) {
@@ -414,6 +416,9 @@ status_t BootAnimation::readyToRun() {
     else if (access(getAnimationFileName(IMG_SYS), R_OK) == 0) {
         mZipFileName = getAnimationFileName(IMG_SYS);
     }
+    else if (access(getAnimationFileName(IMG_THM), R_OK) == 0) {
+        mZipFileName = getAnimationFileName(IMG_THM);
+    }
 
 #ifdef PRELOAD_BOOTANIMATION
     // Preload the bootanimation zip on memory, so we don't stutter
@@ -425,6 +430,8 @@ status_t BootAnimation::readyToRun() {
         fd = fopen(getAnimationFileName(IMG_OEM), "r");
     else if (access(getAnimationFileName(IMG_SYS), R_OK) == 0)
         fd = fopen(getAnimationFileName(IMG_SYS), "r");
+    else if (access(getAnimationFileName(IMG_THM), R_OK) == 0)
+        fd = fopen(getAnimationFileName(IMG_THM), "r");
     else
         return NO_ERROR;
 
