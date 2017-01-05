@@ -410,14 +410,14 @@ status_t BootAnimation::readyToRun() {
     if (encryptedAnimation && (access(getAnimationFileName(IMG_ENC), R_OK) == 0)) {
         mZipFileName = getAnimationFileName(IMG_ENC);
     }
+    else if (access(getAnimationFileName(IMG_THM), R_OK) == 0) {
+        mZipFileName = getAnimationFileName(IMG_THM);
+    }
     else if (access(getAnimationFileName(IMG_OEM), R_OK) == 0) {
         mZipFileName = getAnimationFileName(IMG_OEM);
     }
     else if (access(getAnimationFileName(IMG_SYS), R_OK) == 0) {
         mZipFileName = getAnimationFileName(IMG_SYS);
-    }
-    else if (access(getAnimationFileName(IMG_THM), R_OK) == 0) {
-        mZipFileName = getAnimationFileName(IMG_THM);
     }
 
 #ifdef PRELOAD_BOOTANIMATION
@@ -426,12 +426,12 @@ status_t BootAnimation::readyToRun() {
     FILE* fd;
     if (encryptedAnimation && access(getAnimationFileName(IMG_ENC), R_OK) == 0)
         fd = fopen(getAnimationFileName(IMG_ENC), "r");
+    else if (access(getAnimationFileName(IMG_THM), R_OK) == 0)
+        fd = fopen(getAnimationFileName(IMG_THM), "r");
     else if (access(getAnimationFileName(IMG_OEM), R_OK) == 0)
         fd = fopen(getAnimationFileName(IMG_OEM), "r");
     else if (access(getAnimationFileName(IMG_SYS), R_OK) == 0)
         fd = fopen(getAnimationFileName(IMG_SYS), "r");
-    else if (access(getAnimationFileName(IMG_THM), R_OK) == 0)
-        fd = fopen(getAnimationFileName(IMG_THM), "r");
     else
         return NO_ERROR;
 
