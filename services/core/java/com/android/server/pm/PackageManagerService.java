@@ -302,6 +302,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -2393,10 +2394,10 @@ public class PackageManagerService extends IPackageManager.Stub {
                     scanDirLI(new File(RegionalizationSystemDir, "app"),
                             PackageParser.PARSE_IS_SYSTEM | PackageParser.PARSE_IS_SYSTEM_DIR,
                             scanFlags, 0);
-                    /* Collect overlay in <Package>/system/vendor
+                    // Collect overlay in <Package>/system/vendor
                     scanDirLI(new File(RegionalizationSystemDir, "vendor/overlay"),
                             PackageParser.PARSE_IS_SYSTEM | PackageParser.PARSE_IS_SYSTEM_DIR,
-                            scanFlags | SCAN_TRUSTED_OVERLAY, 0);*/
+                            scanFlags, 0);
                 }
             }
 
@@ -10353,6 +10354,7 @@ public class PackageManagerService extends IPackageManager.Stub {
                 & PermissionInfo.PROTECTION_FLAG_PRIVILEGED) != 0) {
             if (isSystemApp(pkg)) {
                 // For updated system applications, a system permission
+                // is granted only if it had been defined by the original application.
                 if (pkg.isUpdatedSystemApp()) {
                     final PackageSetting sysPs = mSettings
                             .getDisabledSystemPkgLPr(pkg.packageName);
