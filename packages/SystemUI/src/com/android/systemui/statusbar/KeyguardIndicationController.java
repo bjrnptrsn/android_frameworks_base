@@ -77,7 +77,7 @@ public class KeyguardIndicationController {
     private boolean mPowerCharged;
     private int mChargingSpeed;
     private int mChargingCurrent;
-    private double mChargingVoltage;
+    private int mChargingVoltage;
     private int mChargingWattage;
     private int mTemperature;
     private String mMessageToShowOnScreenOn;
@@ -228,12 +228,14 @@ public class KeyguardIndicationController {
 
         if (showbatteryInfo) {
             if (mChargingCurrent > 0) {
-                batteryInfo = batteryInfo + (mChargingCurrent / 1000) + "mA";
+                batteryInfo = batteryInfo + "Max. " + (mChargingCurrent) + "mA"; // ** Just the maximum (not current) value is provided
             }
-            if (mChargingVoltage > 0) {
+            //  ** We just get the maximum, not the current charging voltage
+            //  ** ...anyway, even with QuickCharger it shows 5.0V (should be higher) - so, it's useless
+            /* if (mChargingVoltage > 0)
                 batteryInfo = (batteryInfo == "" ? "" : batteryInfo + " · ") +
-                        String.format("%.1f", (mChargingVoltage / 1000 / 1000)) + "V";
-            }
+                        String.format("%.1f", (mChargingVoltage / 1000)) + "V";
+            } */
             if (mTemperature > 0) {
                 batteryInfo = (batteryInfo == "" ? "" : batteryInfo + " · ") +
                         mTemperature / 10 + "°C";
