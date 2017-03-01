@@ -78,6 +78,7 @@ import android.net.Uri;
 import android.net.metrics.DefaultNetworkEvent;
 import android.net.metrics.IpConnectivityLog;
 import android.net.metrics.NetworkEvent;
+import android.net.wifi.WifiDevice;
 import android.net.util.AvoidBadWifiTracker;
 import android.net.wifi.WifiDevice;
 import android.os.Binder;
@@ -907,7 +908,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
 
     private void handleMobileDataAlwaysOn() {
         final boolean enable = (Settings.Global.getInt(
-                mContext.getContentResolver(), Settings.Global.MOBILE_DATA_ALWAYS_ON, 1) == 1);
+                mContext.getContentResolver(), Settings.Global.MOBILE_DATA_ALWAYS_ON, 0) == 1);
         final boolean isEnabled = (mNetworkRequests.get(mDefaultMobileDataRequest) != null);
         if (enable == isEnabled) {
             return;  // Nothing to do.
@@ -3035,7 +3036,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
         if (isTetheringSupported()) {
             return mTethering.getTetherConnectedSta();
         } else {
-             return null;
+            return null;
         }
     }
 

@@ -249,8 +249,13 @@ public class VolumeDialog implements TunerService.Tunable {
                 });
 
         if (mRows.isEmpty()) {
-            addRow(AudioManager.STREAM_RING,
-                    R.drawable.ic_volume_ringer, R.drawable.ic_volume_ringer_mute, true);
+            if (Util.isVoiceCapable(mContext)) {
+                addRow(AudioManager.STREAM_RING,
+                        R.drawable.ic_volume_ringer, R.drawable.ic_volume_ringer_mute, true);
+            } else {
+                addRow(AudioManager.STREAM_RING, R.drawable.ic_volume_notification,
+                        R.drawable.ic_volume_notification_mute, true);
+            }
             addRow(AudioManager.STREAM_MUSIC,
                     R.drawable.ic_volume_media, R.drawable.ic_volume_media_mute, true);
             addRow(AudioManager.STREAM_ALARM,
@@ -677,7 +682,7 @@ public class VolumeDialog implements TunerService.Tunable {
 
     private void removeRow(VolumeRow volumeRow) {
         mRows.remove(volumeRow);
-        mDialogRowsView.removeView(volumeRow.view);
+        mDialogContentView.removeView(volumeRow.view);
     }
 
     private void onStateChangedH(State state) {
@@ -700,7 +705,9 @@ public class VolumeDialog implements TunerService.Tunable {
             }
         }
 
-        updateNotificationRowH();
+        if (Util.isVoiceCapable(mContext)) {
+            updateNotificationRowH();
+        }
 
         if (mActiveStream != state.activeStream) {
             mActiveStream = state.activeStream;
@@ -778,6 +785,9 @@ public class VolumeDialog implements TunerService.Tunable {
                 && mState.ringerModeInternal == AudioManager.RINGER_MODE_SILENT;
         final boolean isZenAlarms = mState.zenMode == Global.ZEN_MODE_ALARMS;
         final boolean isZenNone = mState.zenMode == Global.ZEN_MODE_NO_INTERRUPTIONS;
+        final boolean isZenPriority = mState.zenMode == Global.ZEN_MODE_IMPORTANT_INTERRUPTIONS;
+        final boolean isRingZenNone = (isRingStream || isSystemStream) && isZenNone;
+        final boolean isRingLimited = isRingStream && isZenPriority;
         final boolean zenMuted = isZenAlarms ? (isRingStream || isSystemStream || isNotificationStream)
                 : isZenNone ? (isRingStream || isSystemStream || isAlarmStream || isMusicStream || isNotificationStream)
                 : isVibrate ? (isNotificationStream)
