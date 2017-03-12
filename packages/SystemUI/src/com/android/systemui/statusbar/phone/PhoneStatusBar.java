@@ -184,7 +184,6 @@ import com.android.systemui.recents.events.activity.UndockingTaskEvent;
 import com.android.systemui.recents.RecentsActivity;
 import com.android.systemui.settings.BrightnessController;
 import com.android.systemui.slimrecent.RecentController;
-import com.android.systemui.slimrecent.SlimScreenPinningRequest;
 import com.android.systemui.stackdivider.Divider;
 import com.android.systemui.stackdivider.WindowManagerProxy;
 import com.android.systemui.statusbar.ActivatableNotificationView;
@@ -600,8 +599,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
     private RecentController mSlimRecents;
 
-    private SlimScreenPinningRequest mSlimScreenPinningRequest;
-
     private View.OnTouchListener mUserAutoHideListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -805,6 +802,15 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.RECENT_CARD_TEXT_COLOR), false, this,
                     UserHandle.USER_ALL);
+             resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.EMPTY_SHADE_VIEW_SHOW_CARRIER_NAME),
+                    false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.EMPTY_SHADE_VIEW_SHOW_WIFI_NAME),
+                    false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.EMPTY_SHADE_VIEW_TEXT_COLOR),
+                    false, this, UserHandle.USER_ALL);
             update();
         }
         
@@ -872,6 +878,15 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
            } else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.BATTERY_LARGE_TEXT))) {
                     UpdateSomeViews();
+           } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.EMPTY_SHADE_VIEW_SHOW_CARRIER_NAME))) {
+                UpdateEmptyShadeShowCarrierName();
+            } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.EMPTY_SHADE_VIEW_SHOW_WIFI_NAME))) {
+                UpdateEmptyShadeShowWifiName();
+            } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.EMPTY_SHADE_VIEW_TEXT_COLOR))) {
+                UpdateEmptyShadeTextColor();
            }  else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.CLEAR_RECENTS_STYLE))
                     || uri.equals(Settings.System.getUriFor(
@@ -951,6 +966,10 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                     UserHandle.USER_CURRENT);
 
             updateTempView();
+
+            UpdateEmptyShadeShowCarrierName();
+            UpdateEmptyShadeShowWifiName();
+            UpdateEmptyShadeTextColor();
             
             boolean mShow4G = Settings.System.getIntForUser(resolver,
                     Settings.System.SHOW_FOURG, 0, UserHandle.USER_CURRENT) == 1;
@@ -1638,9 +1657,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                     Settings.System.STATUS_BAR_SHOW_TICKER, 0, UserHandle.USER_CURRENT) == 1;
         initTickerView();
 
-
-        mSlimScreenPinningRequest = new SlimScreenPinningRequest(mContext);
-
         // set the initial view visibility
         setAreThereNotifications();
 
@@ -1669,6 +1685,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         });
         mNetworkController = new NetworkControllerImpl(mContext, mHandlerThread.getLooper());
         mNetworkController.setUserSetupComplete(mUserSetup);
+        mEmptyShadeView.setNetworkController(mNetworkController);
         mHotspotController = new HotspotControllerImpl(mContext);
         mBluetoothController = new BluetoothControllerImpl(mContext, mHandlerThread.getLooper());
         mSecurityController = new SecurityControllerImpl(mContext);
@@ -2245,7 +2262,7 @@ mWeatherTempSize, mWeatherTempFontStyle, mWeatherTempColor);
 
         @Override
         public boolean onLongClick(View v) {
-            if (mRecents == null || !ActivityManager.supportsMultiWindow()
+            if (!ActivityManager.supportsMultiWindow()
                     || !getComponent(Divider.class).getView().getSnapAlgorithm()
                             .isSplitScreenFeasible()) {
                 return false;
@@ -2259,20 +2276,29 @@ mWeatherTempSize, mWeatherTempFontStyle, mWeatherTempColor);
 
     @Override
     protected void toggleSplitScreenMode(int metricsDockAction, int metricsUndockAction) {
-        if (mRecents == null) {
-            return;
-        }
-        int dockSide = WindowManagerProxy.getInstance().getDockSide();
-        if (dockSide == WindowManager.DOCKED_INVALID) {
-            mRecents.dockTopTask(NavigationBarGestureHelper.DRAG_MODE_NONE,
-                    ActivityManager.DOCKED_STACK_CREATE_MODE_TOP_OR_LEFT, null, metricsDockAction);
-        } else {
-            EventBus.getDefault().send(new UndockingTaskEvent());
-            if (metricsUndockAction != -1) {
-                MetricsLogger.action(mContext, metricsUndockAction);
-            }
-        }
-    }
+         if (mSlimRecents != null) {
+             int dockSide = WindowManagerProxy.getInstance().getDockSide();
+             if (dockSide == WindowManager.DOCKED_INVALID) {
+                 mSlimRecents.startMultiWin();
+             } else {
+                 EventBus.getDefault().send(new UndockingTaskEvent());
+                 if (metricsUndockAction != -1) {
+                     MetricsLogger.action(mContext, metricsUndockAction);
+                 }
+             }
+         } else if (mRecents != null) {
+             int dockSide = WindowManagerProxy.getInstance().getDockSide();
+             if (dockSide == WindowManager.DOCKED_INVALID) {
+                 mRecents.dockTopTask(NavigationBarGestureHelper.DRAG_MODE_NONE,
+                         ActivityManager.DOCKED_STACK_CREATE_MODE_TOP_OR_LEFT, null, metricsDockAction);
+             } else {
+                 EventBus.getDefault().send(new UndockingTaskEvent());
+                 if (metricsUndockAction != -1) {
+                     MetricsLogger.action(mContext, metricsUndockAction);
+                 }
+             }
+         }
+     }
 
     private final View.OnLongClickListener mLongPressHomeListener
             = new View.OnLongClickListener() {
@@ -2854,7 +2880,32 @@ mWeatherTempSize, mWeatherTempFontStyle, mWeatherTempColor);
         boolean showEmptyShade =
                 mState != StatusBarState.KEYGUARD &&
                         mNotificationData.getActiveNotifications().size() == 0;
+        mEmptyShadeView.setListening(showEmptyShade);
         mNotificationPanel.setShadeEmpty(showEmptyShade);
+    }
+
+    private void UpdateEmptyShadeShowCarrierName() {
+        final boolean show = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.EMPTY_SHADE_VIEW_SHOW_CARRIER_NAME, 0) == 1;
+        if (mEmptyShadeView != null) {
+            mEmptyShadeView.setShowCarrierName(show);
+        }
+    }
+
+    private void UpdateEmptyShadeShowWifiName() {
+        final boolean show = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.EMPTY_SHADE_VIEW_SHOW_WIFI_NAME, 0) == 1;
+        if (mEmptyShadeView != null) {
+            mEmptyShadeView.setShowWifiName(show);
+        }
+    }
+
+    private void UpdateEmptyShadeTextColor() {
+        int color = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.EMPTY_SHADE_VIEW_TEXT_COLOR, 0xffffffff);
+        if (mEmptyShadeView != null) {
+            mEmptyShadeView.updateTextColor(color);
+        }
     }
 
     private void updateSpeedbump() {
@@ -6264,7 +6315,6 @@ mWeatherTempSize, mWeatherTempFontStyle, mWeatherTempColor);
 
     public void showScreenPinningRequest(int taskId, boolean allowCancel) {
         hideRecents(false, false);
-        //mSlimScreenPinningRequest.showPrompt(taskId, allowCancel);
         mScreenPinningRequest.showPrompt(taskId, allowCancel);
     }
 
@@ -6544,71 +6594,6 @@ mWeatherTempSize, mWeatherTempFontStyle, mWeatherTempColor);
                         handleStopDozing();
                         break;
                 }
-            }
-        }
-    }
-
-    @Override
-    protected void hideRecents(boolean triggeredFromAltTab, boolean triggeredFromHomeKey) {
-        if (mSlimRecents != null) {
-            mSlimRecents.hideRecents(triggeredFromHomeKey);
-        } else {
-            super.hideRecents(triggeredFromAltTab, triggeredFromHomeKey);
-        }
-    }
-
-    @Override
-    protected void toggleRecents() {
-        if (mSlimRecents != null) {
-            sendCloseSystemWindows(mContext, SYSTEM_DIALOG_REASON_RECENT_APPS);
-            mSlimRecents.toggleRecents(mDisplay, mLayoutDirection, getStatusBarView());
-        } else {
-            super.toggleRecents();
-        }
-    }
-
-    @Override
-    protected void preloadRecents() {
-        if (mSlimRecents != null) {
-            mSlimRecents.preloadRecentTasksList();
-        } else {
-            super.preloadRecents();
-        }
-    }
-
-    @Override
-    protected void cancelPreloadingRecents() {
-        if (mSlimRecents != null) {
-            mSlimRecents.cancelPreloadingRecentTasksList();
-        } else {
-            super.cancelPreloadingRecents();
-        }
-    }
-
-    protected void rebuildRecentsScreen() {
-        if (mSlimRecents != null) {
-            mSlimRecents.rebuildRecentsScreen();
-        }
-    }
-
-    protected void updateRecents() {
-        boolean slimRecents = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.USE_SLIM_RECENTS, 0, UserHandle.USER_CURRENT) == 1;
-
-        if (slimRecents) {
-            mSlimRecents = new RecentController(mContext, mLayoutDirection);
-            //mSlimRecents.setCallback(this);
-            rebuildRecentsScreen();
-        } else {
-            mSlimRecents = null;
-        }
-    }
-
-    private static void sendCloseSystemWindows(Context context, String reason) {
-        if (ActivityManagerNative.isSystemReady()) {
-            try {
-                ActivityManagerNative.getDefault().closeSystemDialogs(reason);
-            } catch (RemoteException e) {
             }
         }
     }
