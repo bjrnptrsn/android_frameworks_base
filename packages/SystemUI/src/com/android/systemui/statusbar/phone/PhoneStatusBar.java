@@ -99,6 +99,7 @@ import android.os.UserHandle;
 import android.os.UserManager;
 import android.os.Vibrator;
 import android.provider.Settings;
+import com.android.systemui.recents.Recents;
 import com.android.systemui.recents.RecentsActivity;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.NotificationListenerService.RankingMap;
@@ -742,9 +743,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.RECENT_CARD_BG_COLOR), false, this,
                     UserHandle.USER_ALL);
-            resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.RECENT_CARD_TEXT_COLOR), false, this,
-                    UserHandle.USER_ALL);
              resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.EMPTY_SHADE_VIEW_SHOW_CARRIER_NAME),
                     false, this, UserHandle.USER_ALL);
@@ -848,9 +846,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                     Settings.System.USE_SLIM_RECENTS))) {
                 updateRecents();
             } else if (uri.equals(Settings.System.getUriFor(
-                    Settings.System.RECENT_CARD_BG_COLOR))
-                    || uri.equals(Settings.System.getUriFor(
-                    Settings.System.RECENT_CARD_TEXT_COLOR))) {
+                    Settings.System.RECENT_CARD_BG_COLOR))) {
                 rebuildRecentsScreen();
             }
            update();
@@ -2042,29 +2038,35 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
     @Override
     protected void toggleSplitScreenMode(int metricsDockAction, int metricsUndockAction) {
-         if (mSlimRecents != null) {
-             int dockSide = WindowManagerProxy.getInstance().getDockSide();
-             if (dockSide == WindowManager.DOCKED_INVALID) {
-                 mSlimRecents.startMultiWin();
-             } else {
-                 EventBus.getDefault().send(new UndockingTaskEvent());
-                 if (metricsUndockAction != -1) {
-                     MetricsLogger.action(mContext, metricsUndockAction);
-                 }
-             }
-         } else if (mRecents != null) {
-             int dockSide = WindowManagerProxy.getInstance().getDockSide();
-             if (dockSide == WindowManager.DOCKED_INVALID) {
-                 mRecents.dockTopTask(NavigationBarGestureHelper.DRAG_MODE_NONE,
-                         ActivityManager.DOCKED_STACK_CREATE_MODE_TOP_OR_LEFT, null, metricsDockAction);
-             } else {
-                 EventBus.getDefault().send(new UndockingTaskEvent());
-                 if (metricsUndockAction != -1) {
-                     MetricsLogger.action(mContext, metricsUndockAction);
-                 }
-             }
-         }
-     }
+        if (mSlimRecents != null) {
+            int dockSide = WindowManagerProxy.getInstance().getDockSide();
+            if (dockSide == WindowManager.DOCKED_INVALID) {
+                mSlimRecents.startMultiWindow();
+                if (metricsDockAction != -1) {
+                    MetricsLogger.action(mContext, metricsDockAction);
+                }
+            } else {
+                EventBus.getDefault().send(new UndockingTaskEvent());
+                if (metricsUndockAction != -1) {
+                    MetricsLogger.action(mContext, metricsUndockAction);
+                }
+            }
+            return;
+        }
+        if (mRecents == null) {
+            return;
+        }
+        int dockSide = WindowManagerProxy.getInstance().getDockSide();
+        if (dockSide == WindowManager.DOCKED_INVALID) {
+            mRecents.dockTopTask(NavigationBarGestureHelper.DRAG_MODE_NONE,
+                    ActivityManager.DOCKED_STACK_CREATE_MODE_TOP_OR_LEFT, null, metricsDockAction);
+        } else {
+            EventBus.getDefault().send(new UndockingTaskEvent());
+            if (metricsUndockAction != -1) {
+                MetricsLogger.action(mContext, metricsUndockAction);
+            }
+        }
+    }
 
     private final View.OnLongClickListener mLongPressHomeListener
             = new View.OnLongClickListener() {
@@ -6363,4 +6365,71 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             }
         }
     }
+
+    @Override
+    protected void hideRecents(boolean triggeredFromAltTab, boolean triggeredFromHomeKey) {
+        if (mSlimRecents != null) {
+            mSlimRecents.hideRecents(triggeredFromHomeKey);
+        } else {
+            super.hideRecents(triggeredFromAltTab, triggeredFromHomeKey);
+        }
+    }
+
+    @Override
+    protected void toggleRecents() {
+        if (mSlimRecents != null) {
+            sendCloseSystemWindows(mContext, SYSTEM_DIALOG_REASON_RECENT_APPS);
+            mSlimRecents.toggleRecents(mDisplay, mLayoutDirection, getStatusBarView());
+        } else {
+            super.toggleRecents();
+        }
+    }
+
+    @Override
+    protected void preloadRecents() {
+        if (mSlimRecents != null) {
+            mSlimRecents.preloadRecentTasksList();
+        } else {
+            super.preloadRecents();
+        }
+    }
+
+    @Override
+    protected void cancelPreloadingRecents() {
+        if (mSlimRecents != null) {
+            mSlimRecents.cancelPreloadingRecentTasksList();
+        } else {
+            super.cancelPreloadingRecents();
+        }
+    }
+
+    protected void rebuildRecentsScreen() {
+        if (mSlimRecents != null) {
+            mSlimRecents.rebuildRecentsScreen();
+        }
+    }
+
+    protected void updateRecents() {
+        boolean slimRecents = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.USE_SLIM_RECENTS, 0, UserHandle.USER_CURRENT) == 1;
+
+        if (slimRecents) {
+            mSlimRecents = new RecentController(mContext, mLayoutDirection);
+            mRecents = null;
+            //mSlimRecents.setCallback(this);
+            rebuildRecentsScreen();
+        } else {
+            mRecents = getComponent(Recents.class);
+            mSlimRecents = null;
+        }
+    }
+
+    private static void sendCloseSystemWindows(Context context, String reason) {
+        if (ActivityManagerNative.isSystemReady()) {
+            try {
+                ActivityManagerNative.getDefault().closeSystemDialogs(reason);
+            } catch (RemoteException e) {
+            }
+        }
+   }
 }
