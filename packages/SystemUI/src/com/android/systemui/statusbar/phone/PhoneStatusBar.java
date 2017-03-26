@@ -752,6 +752,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.EMPTY_SHADE_VIEW_TEXT_COLOR),
                     false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.NO_SIM_CLUSTER_SWITCH),
+                    false, this, UserHandle.USER_ALL);
             update();
         }
         
@@ -767,18 +770,13 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         ContentResolver resolver = mContext.getContentResolver();
 		if (uri.equals(Settings.System.getUriFor(
                     Settings.System.SHOW_FOURG))) {
-                    mShow4G = Settings.System.getIntForUser(
-                            mContext.getContentResolver(),
-                            Settings.System.SHOW_FOURG,
-                            0, UserHandle.USER_CURRENT) == 1;
                     mNetworkController.onConfigurationChanged();
             } else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.SHOW_THREEG))) {
-                    mShow3G = Settings.System.getIntForUser(
-                            mContext.getContentResolver(),
-                            Settings.System.SHOW_THREEG,
-                            0, UserHandle.USER_CURRENT) == 1;
-                        	mNetworkController.onConfigurationChanged();
+                    mNetworkController.onConfigurationChanged();
+            } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.NO_SIM_CLUSTER_SWITCH))) {
+                    trytoinflateclusters();
             } else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.BATTERY_SAVER_MODE_COLOR))) {
                     mBatterySaverWarningColor = Settings.System.getIntForUser(
@@ -878,12 +876,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             UpdateEmptyShadeShowCarrierName();
             UpdateEmptyShadeShowWifiName();
             UpdateEmptyShadeTextColor();
-            
-            boolean mShow4G = Settings.System.getIntForUser(resolver,
-                    Settings.System.SHOW_FOURG, 0, UserHandle.USER_CURRENT) == 1;
-	  
-	    	boolean mShow3G = Settings.System.getIntForUser(resolver,
-            		Settings.System.SHOW_THREEG, 0, UserHandle.USER_CURRENT) == 1;
 
 
             mMaxKeyguardNotifConfig = Settings.System.getIntForUser(resolver,
@@ -6431,5 +6423,12 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             } catch (RemoteException e) {
             }
         }
+   }
+
+   public void trytoinflateclusters() {
+      try {
+          inflateSignalClusters();
+      } catch (Exception e) {
+      }
    }
 }
