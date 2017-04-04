@@ -4032,6 +4032,36 @@ public static final String PHONE_BLACKLIST_REGEX_ENABLED = "phone_blacklist_rege
          */
         public static final String HOME_RESIZE_DURATION = "home_resize_anim_duration";
 
+        /**
+         * Pixel Anim Color
+         * @hide
+         */
+        public static final String DOT_TOP_COLOR = "dot_top_color";
+
+        /**
+         * Pixel Anim Color
+         * @hide
+         */
+        public static final String DOT_BOTTOM_COLOR = "dot_bottom_color";
+
+        /**
+         * Pixel Anim Color
+         * @hide
+         */
+        public static final String DOT_LEFT_COLOR = "dot_left_color";
+
+        /**
+         * Pixel Anim Color
+         * @hide
+         */
+        public static final String DOT_RIGHT_COLOR = "dot_right_color";
+
+        /**
+         * Pixel Anim Color
+         * @hide
+         */
+        public static final String DOT_COLOR_SWITCH = "dot_color_switch";
+
  	    /**
          * Position of Custom logo
          * @hide
@@ -7467,6 +7497,19 @@ public static final String PHONE_BLACKLIST_REGEX_ENABLED = "phone_blacklist_rege
         public static final String PULSE_SOLID_UNITS_OPACITY = "pulse_solid_units_opacity";
 
         /**
+         * Pulse Fading units opacity
+         * @hide
+         */
+        public static final String PULSE_FADING_BLOCKS_OPACITY = "pulse_fading_blocks_opacity";
+
+
+        /**
+         * SmartBar buttons opacity on Pulse
+         * @hide
+         */
+        public static final String PULSE_CUSTOM_BUTTONS_OPACITY = "pulse_custom_buttons_opacity";
+
+        /**
          * A flag containing settings used for biometric weak
          * @hide
          */
@@ -8615,6 +8658,12 @@ public static final String PHONE_BLACKLIST_REGEX_ENABLED = "phone_blacklist_rege
          * @hide
          */
         public static final String QS_LOCATION_EASY_TOGGLE = "qs_location_easy_toggle";
+
+        /**
+         * Enable Volume Up to disable all overlays during boot.
+         * @hide
+         */
+        public static final String VOL_UP_DISABLE_OVERLAYS = "vol_up_disable_overlays";
 
         /**
          * Whether the device should doze if configured.
