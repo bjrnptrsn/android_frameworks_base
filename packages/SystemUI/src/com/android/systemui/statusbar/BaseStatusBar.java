@@ -2951,7 +2951,17 @@ public abstract class BaseStatusBar extends SystemUI implements
         return shouldPeek(entry, entry.notification);
     }
 
+
     protected boolean shouldPeek(Entry entry, StatusBarNotification sbn) {
+        if (!mUseHeadsUp || isDeviceInVrMode()) {
+            return false;
+        }
+
+        if (mNotificationData.shouldFilterOut(sbn)) {
+            if (DEBUG) Log.d(TAG, "No peeking: filtered notification: " + sbn.getKey());
+            return false;
+        }
+
         final ActivityManager am = (ActivityManager)
             mContext.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.RunningTaskInfo foregroundApp = null;
@@ -2964,7 +2974,7 @@ public abstract class BaseStatusBar extends SystemUI implements
         boolean isNotificationFromDialer = sbn.getPackageName().toLowerCase().contains("dialer");
 
         boolean alwaysHeadsUpForThis = !isDialerForegroundApp && isNotificationFromDialer && mIsAlwaysHeadsupDialer;
-        if (!mUseHeadsUp || isDeviceInVrMode() || (!mHeadsUpUserEnabled && !alwaysHeadsUpForThis)) {
+        if ((!mUseHeadsUp && !alwaysHeadsUpForThis) || isDeviceInVrMode()) {
             return false;
         }
 
