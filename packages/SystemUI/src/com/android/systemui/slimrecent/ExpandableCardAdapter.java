@@ -69,6 +69,8 @@ public class ExpandableCardAdapter extends RecyclerView.Adapter<ExpandableCardAd
         holder.screenshot.setVisibility(card.expanded ? View.VISIBLE : View.GONE);
         holder.expandButton.setRotation(card.expanded ? -180 : 0);
 
+        holder.card.setRadius(card.cornerRadius);
+
         if (card.customIcon) {
             holder.expandButton.setImageDrawable(card.custom);
             holder.expandButton.setOnClickListener(card.customClickListener);
@@ -122,7 +124,7 @@ public class ExpandableCardAdapter extends RecyclerView.Adapter<ExpandableCardAd
                 int x = holder.upX - temp[0];
                 int y = holder.upY - temp[1];
                 holder.showOptions(x, y);
-                return false;
+                return true;
             }
         });
 
@@ -166,20 +168,20 @@ public class ExpandableCardAdapter extends RecyclerView.Adapter<ExpandableCardAd
                     R.layout.options_item, holder.optionsView, false);
             option.setImageDrawable(item.icon);
             option.setId(item.id);
-                option.setOnClickListener(new View.OnClickListener() {
+            option.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         if (item.clickListener != null) {
                             item.clickListener.onClick(v);
                         }
                         mCards.get(holder.getAdapterPosition()).optionsShown = false;
-                        int[] temp = new int[2];
-                        v.getLocationOnScreen(temp);
-                        int x = holder.upX - temp[0];
-                        int y = holder.upY - temp[1];
-                        holder.hideOptions(x, y);
+                        holder.hideOptions(v);
                     }
-                });
+            });
+            if (item.touchListener != null) {
+                option.setTag(holder);
+                option.setOnTouchListener(item.touchListener);
+            }
             holder.optionsView.addView(option);
         }
     }
@@ -262,6 +264,14 @@ public class ExpandableCardAdapter extends RecyclerView.Adapter<ExpandableCardAd
             a.start();
         }
 
+        void hideOptions(View v) {
+            int[] temp = new int[2];
+            v.getLocationOnScreen(temp);
+            int x = upX - temp[0];
+            int y = upY - temp[1];
+            hideOptions(x, y);
+        }
+
         void hideOptions(int x, int y) {
             if (x == -1 || y == -1) {
                 optionsView.setVisibility(View.GONE);
@@ -300,6 +310,7 @@ public class ExpandableCardAdapter extends RecyclerView.Adapter<ExpandableCardAd
         boolean expandVisible = true;
         boolean customIcon = false;
         boolean favorite = false;
+        float cornerRadius;
         View.OnLongClickListener appIconLongClickListener;
         int cardBackgroundColor;
         Drawable custom;
@@ -335,6 +346,7 @@ public class ExpandableCardAdapter extends RecyclerView.Adapter<ExpandableCardAd
         int id;
         Drawable icon;
         View.OnClickListener clickListener;
+        View.OnTouchListener touchListener;
         boolean finishIcon = false;
 
         public OptionsItem(Drawable icon, int id, View.OnClickListener clickListener) {
@@ -346,6 +358,11 @@ public class ExpandableCardAdapter extends RecyclerView.Adapter<ExpandableCardAd
         public OptionsItem(Drawable icon, int id, boolean finish) {
             this(icon, id, null);
             this.finishIcon = finish;
+        }
+
+        public OptionsItem setTouchListener(View.OnTouchListener touchListener) {
+            this.touchListener = touchListener;
+            return this;
         }
     }
 }
