@@ -27,7 +27,8 @@
     <integer name="config_chargingSlowlyThreshold">5000000</integer>
 
     <!-- Threshold in micro watts above which a charger is rated as "fast"; 1.5A @ 5V  -->
-    <integer name="config_chargingFastThreshold">7500000</integer>
+    <!-- ** Changed from 7500000: with QuickCharger we get 1.4A @ ?V (voltage shows all the time 5V, maybe we don't get real value) -->
+    <integer name="config_chargingFastThreshold">6900000</integer>
 
     <!-- Guide user to wipe data after fail to unlock for the max times -->
     <integer name="config_max_unlock_countdown_times">0</integer>
