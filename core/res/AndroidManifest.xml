@@ -525,8 +525,11 @@
     <protected-broadcast android:name="org.omnirom.omniswitch.ACTION_TOGGLE_OVERLAY2" />
     <protected-broadcast android:name="org.omnirom.omniswitch.ACTION_RESTORE_HOME_STACK" />
     <protected-broadcast android:name="org.omnirom.omniswitch.ACTION_PRELOAD_TASKS" />
+    <protected-broadcast android:name="org.omnirom.omniswitch.ACTION_HIDE_OVERLAY" />
 
     <protected-broadcast android:name="projekt.substratum.APP_CRASHED" />
+
+    <protected-broadcast android:name="intent_navbar_edit" />
 
     <!-- ====================================================================== -->
     <!--                          RUNTIME PERMISSIONS                           -->
@@ -1113,6 +1116,11 @@
          <p>Not for use by third-party applications. -->
     <permission android:name="android.permission.MODIFY_CELL_BROADCASTS"
                 android:protectionLevel="signature|privileged" />
+
+    <!-- Allows an application to authorize outgoing SMS messages.
+         @hide -->
+    <permission android:name="android.permission.AUTHORIZE_OUTGOING_SMS"
+                android:protectionLevel="signature" />
 
     <!-- =============================================================== -->
     <!-- Permissions for setting the device alarm                        -->
